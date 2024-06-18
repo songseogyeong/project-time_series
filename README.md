@@ -15,10 +15,11 @@
 
 <br></br>
 
-## ○ GLD(금 펀드)
-- 뉴욕 증권거래소 아카(Euronext Arca)에서 거래된다.
+## ○ KODEX 골드선물(H)
+- KRX (한국거래소)에서 거래된다.
 - 상장수지펀드(ETF)로 금의 가격 움직임을 추적하도록 설계되어있다.
-- 이 펀드는 투자자들이 실제로 물리적인 금을 소유하지 않고도 금의 가격에 투자할 수 있는 방법을 제공한다.  
+- 이 펀드는 투자자들이 실제로 물리적인 금을 소유하지 않고도 금의 가격에 투자할 수 있는 방법을 제공한다.
+- 'H'는 환율 변동에 따른 리스크를 줄이기 위한 환 헤지 전략이 적용되었음을 나타낸다.   
 <sub>*상장지수펀드(ETF, Exchange-Traded Fund): 주식 시장에서 거래되는 투자 펀드</sub>
 
 <br></br>
@@ -28,15 +29,17 @@
 ## Ⅰ. 데이터 분석
 ### 1. 데이터 불러오기
 
-<img src='./images/sm01.png' width='800px'>
 <div>
-    <img src='./images/sm04.png' width='500px'>
-    <img src='./images/sm02.png' width='500px'>
+    <img src='./images/sm01.png' width='500px'>
+    <img src='./images/h01.png' width='500px'>
 </div>
 
 <br>
 
-- 그룹 소녀시대의 상승세에 따라 2010년을 기점으로 큰 변동이 발생하기 때문에, 2010년을 기준으로 데이터를 추출하기로 한다.
+<div>
+    <img src='./images/sm04.png' width='500px'>
+    <img src='./images/sm02.png' width='500px'>
+</div>
 
 <br>
 
@@ -48,80 +51,32 @@
 | 2024-06-14 | 79900.0000 | 215.73  |
 | 2024-06-17 | 80000.0000 | 214.63  |
 
-<br>
-
 <details>
   <summary>code</summary>
 
   ```
   import yfinance as yf
 
-  # SM 엔터테인먼트와 GLD(금 펀드, ETF) 티커를 저장
-  columns = ['041510.KQ', 'GLD']  
+  # SM 엔터테인먼트와 Gold(금 펀드, ETF) 티커를 저장
+  columns = ['041510.KQ', '132030.KS']  
 
   # yfinance 라이브러리를 사용하여 특정 종목 데이터를 다운로드 후 시계열 데이터 프레임으로 변환 (소수점 4자리까지 표기)
-  f_df = yf.download(columns, start='2010-01-01')['Adj Close'].round(4)
+  f_df = yf.download(columns, start='2010-10-01', end='2024-06-18')['Adj Close'].round(4)
   f_df
   ```
 </details>
 
-<br></br>
-
-<img src='./images/krw01.png' width='600px'>
-
-<sub>*2024년 6월 17일 오전 10시 경 기준</sub>
-
 <br>
 
-- SM의 주가는 원화, GLD는 달러 기준이기 때문에 SM 기준으로 달러를 원화로 변경한다.
-
-<br>
-
-| Date       | SM         | GLD       |
-|:----------:|:----------:|:---------:|
-| 2010-01-04 | 4196.3833  | 151524.0  |
-| 2010-01-05 | 4408.4121  | 151386.0  |
-| ...        | ...        | ...       |
-| 2024-06-14 | 79900.0000 | 297707.4  |
-| 2024-06-17 | 80000.0000 | 296189.4  |
-
-<br>
-
-<details>
-  <summary>code</summary>
-
-  ```
-  # 함수를 사용하여 원화로 변경
-  pre_f_df.GLD = pre_f_df.GLD.apply(lambda x: krw_transform(x))
-  pre_f_df
-  ```
-</details>
-
-<br>
-
-<details>
-  <summary>code</summary>
-
-  ```
-  # 함수를 사용하여 원화로 변경
-  pre_f_df.GLD = pre_f_df.GLD.apply(lambda x: krw_transform(x))
-  pre_f_df
-  ```
-</details>
+- 그룹 소녀시대의 상승세에 따라 2010년을 기점으로 큰 변동이 발생하기 때문에, 우선 2010년을 기준으로 잡는다.
+- GOLD 주가가 2010년 10월 1일 부터 시작하기 때문에 2010년 10월 1일을 기준으로 데이터를 추출한다.
 
 <br></br>
 <br></br>
 
 ### 2. 주가
-- 2010년 ~ 현재시점까지의 데이터를 보았을 때 SM과 GLD은 2011년을 기점으로 금액이 상승하였다가 2013년 쯤 하락하였으며,  
-  2020년 ~ 2021년을 기점으로 다시 금액이 상승하는 것을 볼 수 있다.
-- 주가 변동 패턴이 어느정도 유사하게 나타남에 따라 두 종목 간의 상관관계를 추정해볼 수 있다.
-
-<br>
-
+#### ○ 주가 비교
 <img src='./images/b01.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -129,48 +84,73 @@
   ```
   import matplotlib.pyplot as plt
 
-  # 데이터 시각화
-  # figsize: 데이터 크기 지정
-  # subplots: 여러 개의 하위 그래프(서브 플롯) 생성, 각 변수의 데이터를 개별적으로 시각화
-  pre_f_df.plot(figsize=(15, 5), color=colors, subplots=True)
+  # 그래프 크기 설정
+  fig, ax = plt.subplots(2, 1, figsize=(15, 7))
 
+  # 주가 시각화
+  pre_f_df.SM.plot(color=colors[0], ax=ax[0])
+  ax[0].set_title('SM')
+  ax[0].legend()
+
+  pre_f_df.GOLD.plot(color=colors[1], ax=ax[1])
+  ax[1].set_title('GOLD')
+  ax[1].legend()
+
+  # 레이아웃 조정
+  plt.tight_layout()
+
+  # 그래프 표시
   plt.show()
   ```
 </details>
 
+<br>
+
+- 2010년 ~ 현재시점까지의 데이터를 보았을 때 SM과 GLD은 2011년을 기점으로 금액이 상승하였다가 2013년 쯤 하락하였으며,  
+  2020년 ~ 2021년을 기점으로 다시 금액이 상승하는 것을 볼 수 있다.
+- 주가 변동 패턴이 어느정도 유사하게 나타남에 따라 두 종목 간의 상관관계를 추정해볼 수 있다.
+
 <br></br>
 
-- 차분 후 데이터를 확인하였을 때, SM, GLD 수익률의 변동이 전반적으로 크지 않기 때문에 일반적으로 안정적이라 판단되나  
-  2023년 sm의 수익률이 크게 변동한 것으로 나타나 해당 연도에 안정성이 떨어진 것으로 보여진다.
-
-<br>
-
+#### ○ 차분 후 주가 비교
 <img src='./images/b02.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
 
   ```
-  # 차분 후 데이터 시각화
-  pre_f_df.diff().plot(figsize=(15, 5), color=colors, subplots=True)
+import matplotlib.pyplot as plt
+
+  # 그래프 크기 설정
+  fig, ax = plt.subplots(2, 1, figsize=(15, 7))
+
+  # 차분 후 주가 시각화
+  pre_f_df.SM.diff().plot(color=colors[0], ax=ax[0])
+  ax[0].set_title('SM')
+  ax[0].legend()
+
+  pre_f_df.GOLD.diff().plot(color=colors[1], ax=ax[1])
+  ax[1].set_title('GOLD')
+  ax[1].legend()
+
+  # 레이아웃 조정
+  plt.tight_layout()
+
+  # 그래프 표시
   plt.show()
   ```
 </details>
+
+<br>
+
+- 차분 후 데이터를 확인하였을 때, SM, GLD 수익률의 변동이 전반적으로 크지 않기 때문에 일반적으로 안정적이라 판단되나  
+  2023년 sm의 수익률이 크게 변동한 것으로 나타나 해당 연도에 안정성이 떨어진 것으로 보여진다.
 
 <br></br>
 <br></br>
 
 ### 3. 변화율 및 변동률
-- SM과 GLD의 변화율 및 변동률을 비교한 결과, SM의 변화율과 변동률이 상대적으로 높게 나타났다.
-- 2023년 SM의 수익률 변동이 크게 발생한 점을 고려할 때, 단기적인 변동이 장기적인 안정성을 올바르게 반영하지 못할 가능성이 있다.
-
-<br>
-
 <img src='./images/b03.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -183,11 +163,11 @@
 
   # 변화율 시각화
   pre_f_df.pct_change().mean().plot(kind='bar', color=colors, edgecolor='black', ax=ax[0])
-  ax[0].set_title('변화율')
+  ax[0].set_title('변화량')
 
   # 변동률 시각화
   pre_f_df.pct_change().std().plot(kind='bar', color=colors, edgecolor='black', ax=ax[1])
-  ax[1].set_title('변동률')
+  ax[1].set_title('변동량')
 
   # 레이아웃 조정
   plt.tight_layout()
@@ -197,94 +177,16 @@
   ```
 </details>
 
-<br></br>
-<br></br>
-
-### 4. VIF
-- SM과 GLD의 다중공선성을 확인하여 두 종목 간의 상관관계를 평가한 결과, 각 VIF 점수가 약 1로 나타나며 매우 낮은 상관관계를 보였다.  
-- 따라서 주가 변동 패턴이 유사하다고 해서 두 종목 간에 상관관계가 있다고 단정할 수 없었고, 각 종목은 서로 독립적이며 선형 관계가 거의 없음을 확인했다.
-
 <br>
 
-| feature | vif_score |
-|:-------:|:---------:|
-| SM      | 1.000015  |
-| GLD     | 1.000015  |
-
-<br>
-
-<details>
-  <summary>code</summary>
-
-  ```
-  import pandas as pd
-  from statsmodels.stats.outliers_influence import variance_inflation_factor
-
-  # 다중 공산성 평가 지표 VIF 함수 선언
-  def get_vif(features):
-      vif = pd.DataFrame()
-      vif['vif_score'] = [variance_inflation_factor(features.values, i) for i in range(features.shape[1])]
-      vif['feature'] = features.columns
-      return vif
-  ```
-</details>
+- SM과 GOLD의 변화량 및 변동량을 비교한 결과, SM의 변화량과 변동량이 상대적으로 높게 나타났다.
+- 2023년 SM의 수익률 변동이 크게 발생한 점을 고려할 때, 단기적인 변동이 장기적인 안정성을 올바르게 반영하지 못할 가능성이 있다.
 
 <br></br>
 <br></br>
 
-### 6. 분포
-- 데이터 분포와 로그 변환된 데이터 분포를 비교하엿을 때, 정규분포에 가까워진 것을 확인할 수 있다.
-- 이로 인해 신뢰성이 향상되었으며, 로그 변환을 통해 일정한 척도로 비교할 수 있는 편의성이 증가했다. 
-
-<br>
-
-<img src='./images/b05.png' width=800px>
-
-<br>
-
-<details>
-  <summary>code</summary>
-
-  ```
-  import matplotlib.pyplot as plt
-  import numpy as np
-
-  # 그래프 크기 설정
-  fig, ax = plt.subplots(2, 2, figsize=(15, 9))
-
-  # SM 분포 시각화
-  pre_f_df.SM.hist(color=colors[0], edgecolor='black', bins=50, ax=ax[0][0])
-  ax[0][0].set_title('SM 분포')
-
-  # GLD 분포 시각화
-  pre_f_df.GLD.hist(color=colors[1], edgecolor='black', bins=50, ax=ax[0][1])
-  ax[0][1].set_title('GLD 분포')
-
-  # SM 분포 시각화
-  rate_f_df.SM.hist(color=colors[0], edgecolor='black', bins=50, ax=ax[1][0])
-  ax[1][0].set_title('SM 분포 log 변환')
-
-  # GLD 분포 시각화
-  rate_f_df.GLD.hist(color=colors[1], edgecolor='black', bins=50, ax=ax[1][1])
-  ax[1][1].set_title('GLD 분포 log 변환')
-
-
-  # 레이아웃 조정
-  plt.tight_layout()
-
-  # 그래프 표시
-  plt.show()
-  ```
-</details>
-
-<br></br>
-<br></br>
-
-### 5. 수익률
-- 현재 시점에서 과거의 시점을 기준으로 SM과 GLD의 수익률을 계산하고 시각화했다.
-- SM과 GLD의 연율화된 연간 수익률을 비교하였을 때, SM이 25.84%, GLD가 4.78%로 SM의 수익율이 더 높다는 것을 확인했다.
-- 하지만, SM의 수익율이 높은 대신 변동률은 GLD가 더 안정적이므로  
-  고수익을 원하는 투자자는 SM을 선호할 수 있지만, 안정적인 투자를 원하는 경우에는 GLD를 선택할 수 있다.
+### 4. 수익률
+<img src='./images/b04.png' width=800px>
 
 <br>
 
@@ -292,12 +194,6 @@
 |:---:|:---------:|
 | SM  | 0.259264  |
 | GLD | 0.047449  |
-
-<br>
-
-<img src='./images/b04.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -326,12 +222,16 @@
   ```
 </details>
 
+<br>
+
+- 현재 시점에서 과거의 시점을 기준으로 SM과 GOLD의 수익률을 계산하고 시각화했다.
+- SM의 수익률이 더 큰 것을 확인할 수 있었지만, 변동률은 GOLD가 더 안정적으로 나타났다.
+- 고수익을 원하는 투자자는 SM을 선호할 수 있지만, 안정적인 투자를 원하는 경우에는 GLD를 선택할 수 있다.
+
 <br></br>
 
 #### ○ 일간 수익률
 <img src='./images/b06.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -347,12 +247,10 @@
   ```
 </details>
 
-<br></br>
+<br>
 
 #### ○ 월간 수익률
 <img src='./images/b07.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -369,7 +267,7 @@
 
 <br>
 
-- SM의 일간 수익률과 연간 수익률은 2011년 말과 2022년에 변동성이 크게 나타났지만, GLD는 안정적인 패턴을 보였다,
+- SM의 일간 수익률과 연간 수익률은 2011년 말과 2022년에 변동성이 크게 나타났지만, GOLD는 안정적인 패턴을 보였다,
 - 월간 수익률은 각 월의 마지막 값을 기준으로 측정되었으며, 월간 수익률 그래프는 일간 수익률 그래프보다 변동성이 적고 더 안정적이다.
 
 <br>
@@ -409,22 +307,123 @@
 **○ 2024년**
 - 2024년 상반기: 그룹 에스파의 멤버 카리나 양의 연애설로 인해 수익률이 크게 하락했다.
 
-<br>
-
 <img src='./images/sm11.png' width=500px>
 
 <br></br>
 <br></br>
 
-### 6. 이동평균
-- SM 종목의 20일 이동평균 주가 움직임을 확인하였을 때, 최댓값과 최솟값이 감소하는 상황이며, 주가 상승과 하락도 극단적으로 줄어들고 있다.
-- 따라서, 최댓값과 최솟값의 감소는 전반적으로 주가가 하락하고 있는 추세를 나타낸다.
+### 5. 연율화
+
+|  종목  | 연율화       |
+|:----:|:---------:|
+| SM   | -0.228602 |
+| GOLD | 0.105147  |
+
+<details>
+  <summary>code</summary>
+
+  ```
+  # 연간 연율화
+
+  # 연율화 계산을 위해 최근 1년 데이터 추출
+  pre_rate_f_df = rate_f_df[-252:]
+
+  # 연간 영업일(약 252일로 계산)
+  annualized_mean = pre_rate_f_df.mean() * 252
+  annualized_mean
+  ```
+</details>
 
 <br>
 
+- 연간 영업일을 약 252일로 두고 연간 연율화를 계산했을 때, SM이 약 -0.2286, GOLD가 0.1051으로 나타났다.
+- 최근 1년 간 GOLD가 긍정적인 성과를 보이며 안정적인 투자 대안임을 나타내고, SM은 부정적인 성과를 보여 주의가 필요하다.
+
+<br></br>
+<br></br>
+
+
+### 6. VIF
+
+| feature | vif_score |
+|:-------:|:---------:|
+| SM      | 1.000015  |
+| GOLD     | 1.000015  |
+
+<details>
+  <summary>code</summary>
+
+  ```
+  import pandas as pd
+  from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+  # 다중 공산성 평가 지표 VIF 함수 선언
+  def get_vif(features):
+      vif = pd.DataFrame()
+      vif['vif_score'] = [variance_inflation_factor(features.values, i) for i in range(features.shape[1])]
+      vif['feature'] = features.columns
+      return vif
+  ```
+</details>
+
+<br>
+
+- SM과 GOLD의 다중공선성을 확인하여 두 종목 간의 상관관계를 평가한 결과,   
+각 VIF 점수가 약 1로 나타나며 매우 낮은 상관관계를 보였다.  
+- 따라서 주가 변동 패턴이 유사하다고 해서 두 종목 간에 상관관계가 있다고 단정할 수 없었고,  
+ 각 종목은 서로 독립적이며 선형 관계가 거의 없음을 확인했다.
+
+<br></br>
+<br></br>
+
+### 7. 분포
+<img src='./images/b05.png' width=800px>
+
+<details>
+  <summary>code</summary>
+
+  ```
+  import matplotlib.pyplot as plt
+  import numpy as np
+
+  # 그래프 크기 설정
+  fig, ax = plt.subplots(2, 2, figsize=(15, 9))
+
+  # SM 분포 시각화
+  pre_f_df.SM.hist(color=colors[0], edgecolor='black', bins=50, ax=ax[0][0])
+  ax[0][0].set_title('SM 분포')
+
+  # GLD 분포 시각화
+  pre_f_df.GOLD.hist(color=colors[1], edgecolor='black', bins=50, ax=ax[0][1])
+  ax[0][1].set_title('GOLD 분포')
+
+  # SM 분포 시각화
+  rate_f_df.SM.hist(color=colors[0], edgecolor='black', bins=50, ax=ax[1][0])
+  ax[1][0].set_title('SM 분포 log 변환')
+
+  # GLD 분포 시각화
+  rate_f_df.GOLD.hist(color=colors[1], edgecolor='black', bins=50, ax=ax[1][1])
+  ax[1][1].set_title('GOLD 분포 log 변환')
+
+
+  # 레이아웃 조정
+  plt.tight_layout()
+
+  # 그래프 표시
+  plt.show()
+  ```
+</details>
+
+<br>
+
+- 데이터 분포와 로그 변환된 데이터 분포를 비교하엿을 때, 정규분포에 가까워진 것을 확인할 수 있다.
+- 이로 인해 신뢰성이 향상되었으며, 로그 변환을 통해 일정한 척도로 비교할 수 있는 편의성이 증가했다. 
+
+<br></br>
+<br></br>
+
+### 8. 이동평균
 <img src='./images/b08.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -439,6 +438,8 @@
   sm_df['mean'] = sm_df['SM'].rolling(window=window).mean()
   # 이동평균 후 최댓값 계산
   sm_df['max'] = sm_df['SM'].rolling(window=window).max()
+  # 이동평균 후 중앙값 계산
+  sm_df['median'] = sm_df['SM'].rolling(window=window).median()
 
   # 전체 대상으로 값을 구하는 것이 아니라 윈도우 값이 20이라고 가정하면 20 중 해당하는 값을 구하는 것
   # 최댓값을 구한다고 가정했을 때, 1~20 중 최댓값, 2~21 중 최댓값... 이런식으로 들감
@@ -447,8 +448,6 @@
   sm_df.dropna()
   ```
 </details>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -459,7 +458,7 @@
   # 최솟값, 평균값, 최댓값의 이동평균 시각화
   # 마지막 252일의 데이터 시각화(1년 치)
   # 최솟값, 최댓값 초록색 점선으로, 평균값은 빨간색으로 표기
-  ax = sm_df[['min', 'mean', 'max']].iloc[-252:].plot(figsize=(12, 6), style=['g--', 'r--', 'g--'], lw=0.8)
+  ax = sm_df[['min', 'mean', 'max', 'median']].iloc[-252:].plot(figsize=(12, 6), style=['g--', 'r--', 'g--', 'y--'], lw=0.8)
   # 마지막 252일의 원본 데이터도 함께 표기
   sm_df['SM'].iloc[-252:].plot(ax=ax)
 
@@ -468,19 +467,17 @@
   ```
 </details>
 
-<br></br>
-<br></br>
-
-### 7. 거래 전략
-- 장기 선과 단기 선을 표시하여 골든/데드 크로스를 나타냈다.
-- 변화 폭이 가장 컸던 2023년 상반기는 장기가 상승하고 단기가 하락함에 따라 골든 크로스가 발생해 적극 매수가 권장됐고,  
-  이후 2023년 하반기에 장기가 하락하고 단기가 상승함에 따라 데드 크로스가 발생해 적극 매도가 권장됐다.
-
 <br>
+
+- SM 종목의 20일 이동평균 주가 움직임을 확인하였을 때, 최댓값과 최솟값이 감소하는 상황이며, 주가 상승과 하락도 극단적으로 줄어들고 있다.
+- 따라서, 최댓값과 최솟값의 감소는 전반적으로 추가가 하락하고 있는 추세를 나타낸다.
+
+<br></br>
+<br></br>
+
+### 9. 거래 전략
 
 <img src='./images/b09.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -495,13 +492,11 @@
   ```
 </details>
 
-<br>
-
 <details>
   <summary>code</summary>
 
   ```
-  # 아마존 주가 기술 분석
+  # 주가 기술 분석
   # 골든 크로스, 데드 크로스
 
   # 데이터 NaN 값 제거
@@ -522,19 +517,19 @@
   ```
 </details>
 
+<br>
+
+- 장기 선과 단기 선을 표시하여 골든/데드 크로스를 나타냈다.
+- 변화 폭이 가장 컸던 2023년 상반기는 장기가 상승하고 단기가 하락함에 따라 골든 크로스가 발생해 적극 매수가 권장됐고,  
+  이후 2023년 하반기에 장기가 하락하고 단기가 상승함에 따라 데드 크로스가 발생해 적극 매도가 권장됐다.
+
 <br></br>
 <br></br>
 <br></br>
 
 ## Ⅱ. 머신러닝
 ### 1. 데이터 세트 분리
-- 모델 평가를 위해 전체 데이터의 80%를 훈련 데이터로 나머지 20%를 평가 데이터로 분리했다.
-
-<br>
-
 <img src='./images/m01.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -551,18 +546,15 @@
   ```
 </details>
 
+<br>
+
+- 모델 평가를 위해 전체 데이터의 80%를 훈련 데이터로 나머지 20%를 평가 데이터로 분리했다.
+
 <br></br>
 <br></br>
 
 ### 2. ACF, PACF
-- 좌측 ACF 그래프는 점차 감소하는 상관관계를 보이며, 느리게 감소함에 따라 비정상성을 띄고 있음을 확인할 수 있다.
-- 차분 후 우측 PACF 그래프를 시각화하여 정상성을 가지고 있는 것을 확인할 수 있으며, 이는 AR(자기회귀) 모델을 적용하기에 적합하다.
-
-<br>
-
 <img src='./images/m02.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -584,18 +576,16 @@
   ```
 </details>
 
+<br>
+
+- 좌측 ACF 그래프는 점차 감소하는 상관관계를 보이며, 느리게 감소함에 따라 비정상성을 띄고 있음을 확인할 수 있다.
+- 차분 후 우측 PACF 그래프에서 0에 거의 안착함에 따라 정상성을 가지고 있는 것을 확인할 수 있으며, 이는 AR(자기회귀) 모델을 적용하기에 적합하다.
+
 <br></br>
 <br></br>
 
 ### 3. 검정
-- 검정을 통해 1차분이 가장 좋은 것으로 나타났으며, 오토 아리마를 통해 최적의 파라미터 값을 도출했다.
-- ARIMA(0,1,0)이 최적의 모델로 나타났다.
-
-<br>
-
 <img src='./images/m03.png' width=300px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -621,8 +611,6 @@
   print(f'd = {n_diffs}')
   ```
 </details>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -651,31 +639,19 @@
   ```
 </details>
 
+<br>
+
+- 검정을 통해 1차분이 가장 좋은 것으로 나타났으며, 오토 아리마를 통해 최적의 파라미터 값을 도출했다.
+- ARIMA(0,1,0)이 최적의 모델로 나타났다.
+
 <br></br>
 <br></br>
 
 ### 4. 모델 정보
-- Prob(Q), 융-박스 검정 통계량 수치가 0.58로 나타났고,  
-  코렐로그램에서도 0 주변에 안착(정상 시계열) 했기 때문에 잔차가 독립적이라고 보여진다.  
-    따라서 시계열 데이터에서의 자기상관 구조가 없어 보인다.
-  
-- Prob(H), 이분산성 검정 통계량 수치가 0.00으로 나타났고,  
-  스탠다다이즈드 레지듀얼스에서 잔차의 분산이 일정하지 않음에 따라 이분산성이 있다고 보여진다.
-  
-- Prob(JB), 자크-베라 검정 통계량 수치가 0.00으로 나타났고,  
-  노멀 큐-큐에서 잔차가 45도 선상에 분포되어 있지 않기 때문에 정규분포를 따르지 않는다고 보여진다.
-  
-- Skew, 왜도 수치는 0.62으로 나타났고 Kurtosis, 첨도 수치는 6.30으로 나타났다.  
-  히스토그램에서 종목인 KDE가 정규분포인 N보다 조금 더 우측으로 쏠리고 뾰족한 것으로 보여진다.
-
-<br>
-
 <div>
   <img src='./images/m04.png' width=500px>
   <img src='./images/m05.png' width=800px>
 </div>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -708,8 +684,6 @@
   ```
 </details>
 
-<br>
-
 <details>
   <summary>code</summary>
 
@@ -722,18 +696,27 @@
   ```
 </details>
 
+<br>
+
+- Prob(Q), 융-박스 검정 통계량 수치가 0.58로 나타났고,  
+  Correlogram(코렐로그램)에서도 0 주변에 안착(정상 시계열) 했기 때문에 잔차가 독립적이라고 보여진다.  
+    따라서 시계열 데이터에서의 자기상관 구조가 없어 보인다.
+  
+- Prob(H), 이분산성 검정 통계량 수치가 0.00으로 나타났고,  
+  Standardized residual(스탠다다이즈드 레지듀얼스)에서 잔차의 분산이 일정하지 않음에 따라 이분산성이 있다고 보여진다.
+  
+- Prob(JB), 자크-베라 검정 통계량 수치가 0.00으로 나타났고,  
+  Histogram(히스토그램)에서 팻 테일 리스크가 보이며  
+  Normal Q-Q(노멀 큐-큐)에서 잔차가 45도 선상에 분포되어 있지 않기 때문에 정규분포를 따르지 않는다고 보여진다.
+  
+- Skew, 왜도 수치는 0.62으로 나타났고 Kurtosis, 첨도 수치는 6.30으로 나타났다.  
+  Histogram(히스토그램)에서 종목인 KDE가 정규분포인 N보다 조금 더 좌측으로 쏠리는 오른쪽으로 꼬리가 긴 형태이며, 첨도는 뾰족한 것으로 보여진다.
+
 <br></br>
 <br></br>
 
 ### 5. 예측
 #### ○ 미업데이트
-- y_test 길이만큼의 기간 동안의 예측을 수행 시  
-  주어진 입력 데이터의 패턴 및 동향을 고려하여 값을 예상하는데,  
-  모델이 현재 사용 중인 데이터에 대해서만 학습하기 때문에 동일한 값만 나타나고 있다.
-- 따라서, 모델 업데이트를 해야만 추가적인 예측이 제대로 수행된다.
-
-<br>
-
 | 연번  | 예측값      |
 |:---:|:--------:|
 | 201 | 87800.0  |
@@ -741,8 +724,6 @@
 | ... | ...      |
 | 250 | 87800.0  |
 | 251 | 87800.0  |
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -759,12 +740,24 @@
   ```
 </details>
 
+<br>
+
+- y_test 길이만큼의 기간 동안의 예측을 수행 시  
+  주어진 입력 데이터의 패턴 및 동향을 고려하여 값을 예상하는데,  
+  모델이 현재 사용 중인 데이터에 대해서만 학습하기 때문에 동일한 값만 나타나고 있다.
+- 따라서, 모델 업데이트를 해야만 추가적인 예측이 제대로 수행된다.
+
 <br></br>
 
-#### ○ 업데이트
+#### ○ 신뢰구간
 - 신뢰구간: 81748.25615207, 93851.74384793
 - 신뢰구간은 예측값의 범위를 나타내며, 이 범위 내에 새로운 데이터가 포함되면 모델의 예측이 일치한다고 간주된다.
 - 신뢰구간의 중심에 있는 값(평균값)을 예측값으로 사용하여 모델의 예측을 보다 신뢰성 있게 수행한다.
+
+<br></br>
+
+#### ○ 업데이트
+<img src='./images/m06.png' width=800px>
 
 <br>
 
@@ -776,8 +769,6 @@
 | 2024-06-14 | 79900.0 | 82000.0  |
 | 2024-06-17 | 80000.0 | 79900.0  |
 
-<br>
-
 <details>
   <summary>code</summary>
 
@@ -788,8 +779,6 @@
       return prediction.tolist()[0]
   ```
 </details>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -808,19 +797,6 @@
       model.update(data)
   ```
 </details>
-
-<br></br>
-
-- 실제 값을 알고 있어야 예측이 되기 때문에 한 스텝 씩 업데이트를 하여 예측한 결과  
-  2.6879% 센트의 오차가 있으나 시각화 자료를 확인하였을 때, 거의 유사한 것을 알 수 있었다.
-- 시계열 데이터는 실제 데이터와 모델의 예측 값을 비교하여 모델의 평가를 위해 사용되는 것으로 미래이의 값을 예측하기는 어렵다.  
-  따라서 딥러닝에서 미래를 예측해보기로 한다.
-
-<br>
-
-<img src='./images/m06.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -843,32 +819,22 @@
   ```
 </details>
 
+<br>
+
+- 실제 값을 알고 있어야 예측이 되기 때문에 한 스텝 씩 업데이트를 하여 예측한 결과  
+  2.6830% 센트의 오차가 있으나 시각화 자료를 확인하였을 때, 거의 유사한 것을 알 수 있었다.
+- 시계열 데이터는 실제 데이터와 모델의 예측 값을 비교하여 모델의 평가를 위해 사용되는 것으로 미래이의 값을 예측하기는 어렵다.  
+  따라서 딥러닝에서 미래를 예측해보기로 한다.
+
 <br></br>
 <br></br>
 <br></br>
 
 ## Ⅲ. 딥러닝
 ### 1. 1cycle
-```
-'changepoint_prior_scale': [0.05, 0.1, 0.5, 1.0, 5.0, 10.0],
-'seasonality_prior_scale': [0.05, 0.1, 1.0, 10.0],
-'seasonality_mode': ['additive', 'multiplicative']
-```
-
-<br>
-
-- 위 파라미터 값과 1년치 데이터를 통해 프로팻으로 최적의 파라미터 값을 탐색한 결과 로스 값 약 0.0842으로 나오는,  
-  changepoint_prior_scale=0.10,  
-  seasonality_prior_scale=0.10,  
-  seasonality_mode='additive'이 가장 최적의 파라미터로 나타났다.
-
-<br>
-
 | changepoint_prior_scale | seasonality_prior_scale | seasonality_mode | mape     |
 |:-----------------------:|:-----------------------:|:----------------:|:--------:|
 | 0.10                    | 0.10                    | additive         | 0.0842 |
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -879,9 +845,6 @@
   sm_df
   ```
 </details>
-
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -951,17 +914,25 @@
   ```
 </details>
 
+<br>
+
+```
+'changepoint_prior_scale': [0.05, 0.1, 0.5, 1.0, 5.0, 10.0],
+'seasonality_prior_scale': [0.05, 0.1, 1.0, 10.0],
+'seasonality_mode': ['additive', 'multiplicative']
+```
+
+<br>
+
+- 위 파라미터 값과 1년치 데이터를 통해 프로팻으로 최적의 파라미터 값을 탐색한 결과 로스 값 약 0.0842으로 나오는,  
+  changepoint_prior_scale=0.10,  
+  seasonality_prior_scale=0.10,  
+  seasonality_mode='additive'이 가장 최적의 파라미터로 나타났다.
+
 <br></br>
 
-- 예측 결과 신뢰 구간이 뒤로 갈수록 점점 넓어지는 것을 확인할 수 있었으며,  
-  훈련 값이 신뢰 구간에서 조금씩 벗어나는 것으로 보여졌다.
-- 따라서, 1년치 데이터로는 정확한 예측이 불가능하다고 판단되어 3년치 데이터로 예측을 시도해보기로 한다.
-
-<br>
-
+#### ○ 예측 결과
 <img src='./images/m07.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -989,8 +960,6 @@
   ```
 </details>
 
-<br>
-
 <details>
   <summary>code</summary>
 
@@ -1007,8 +976,6 @@
   forecast_df.index = pd.to_datetime(forecast_df.index)
   ```
 </details>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -1027,11 +994,7 @@
   ```
 </details>
 
-<br>
-
 <img src='./images/m08.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -1044,6 +1007,11 @@
   ```
 </details>
 
+<br>
+
+- 예측 결과 신뢰 구간이 뒤로 갈수록 점점 넓어지는 것을 확인할 수 있었으며,  
+  훈련 값이 신뢰 구간에서 조금씩 벗어나는 것으로 보여졌다.
+- 따라서, 1년치 데이터로는 정확한 예측이 불가능하다고 판단되어 3년치 데이터로 예측을 시도해보기로 한다.
 
 <br></br>
 
@@ -1054,8 +1022,6 @@
 
 #### ○ 주간 그래프
 <img src='./images/m10.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -1085,35 +1051,9 @@
 <br></br>
 
 ### 2. 2cycle
-```
-'changepoint_prior_scale': [0.05, 0.1, 0.5, 1.0, 5.0, 10.0],
-'seasonality_prior_scale': [0.05, 0.1, 1.0, 10.0],
-'seasonality_mode': ['additive', 'multiplicative']
-```
-
-<br>
-
-- 위 파라미터 값과 3년치 데이터를 통해 최적의 파라미터 값을 탐색한 결과 로스 값 약 0.1911으로 나오는  
-  changepoint_prior_scale=5.00,  
-  seasonality_prior_scale=0.05,  
-  seasonality_mode='multiplicative'이 가장 최적의 파라미터로 나타났으나,  
-  multiplicative의 주기성을 더 주려고 하는 특성으로 아래와 같은 그래프가 그려지게 됐다.
-
-<br>
-
-<img src='./images/deep01.png' width=800px>
-
-<br>
-
-- 따라서, 기존 파라미터 값에 모드만 'additive'로 변경하여 사용하고자 한다.
-
-<br>
-
 | changepoint_prior_scale | seasonality_prior_scale | seasonality_mode | mape     |
 |:-----------------------:|:-----------------------:|:----------------:|:--------:|
 | 5.00                    | 0.05                    | additive         | 0.1909 |
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -1124,8 +1064,6 @@
   sm2_df
   ```
 </details>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -1195,17 +1133,34 @@
   ```
 </details>
 
+<br>
+
+```
+'changepoint_prior_scale': [0.05, 0.1, 0.5, 1.0, 5.0, 10.0],
+'seasonality_prior_scale': [0.05, 0.1, 1.0, 10.0],
+'seasonality_mode': ['additive', 'multiplicative']
+```
+
+<br>
+
+- 위 파라미터 값과 3년치 데이터를 통해 최적의 파라미터 값을 탐색한 결과 로스 값 약 0.1911으로 나오는  
+  changepoint_prior_scale=5.00,  
+  seasonality_prior_scale=0.05,  
+  seasonality_mode='multiplicative'이 가장 최적의 파라미터로 나타났으나,  
+  multiplicative의 주기성을 더 주려고 하는 특성으로 아래와 같은 그래프가 그려지게 됐다.
+
+<br>
+
+<img src='./images/deep01.png' width=800px>
+
+<br>
+
+- 따라서, 기존 파라미터 값에 모드만 'additive'로 변경하여 사용하고자 한다.
 
 <br></br>
 
-- 예측 결과 신뢰 구간이 뒤로 갈수록 점점 넓어지는 것을 확인할 수 있었으며,  
-  훈련 값이 신뢰 구간과 거의 유사한 것으로 보여졌다.
-
-<br>
-
+#### ○ 예측 결과
 <img src='./images/m11.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -1233,8 +1188,6 @@
   ```
 </details>
 
-<br>
-
 <details>
   <summary>code</summary>
 
@@ -1251,8 +1204,6 @@
   forecast_df.index = pd.to_datetime(forecast_df.index)
   ```
 </details>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -1273,11 +1224,7 @@
   ```
 </details>
 
-<br>
-
 <img src='./images/m12.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -1290,23 +1237,25 @@
   ```
 </details>
 
+<br>
+
+- 예측 결과 신뢰 구간이 뒤로 갈수록 점점 넓어지는 것을 확인할 수 있었으며,  
+  훈련 값이 신뢰 구간과 거의 유사한 것으로 보여졌다.
 
 <br></br>
 
 #### ○ 연간 그래프
 <img src='./images/m13.png' width=800px>
 
-<br></br>
+<br>
 
 #### ○ 주간 그래프
 <img src='./images/m14.png' width=800px>
 
-<br></br>
+<br>
 
 #### ○ 월간 그래프
 <img src='./images/m15.png' width=800px>
-
-<br>
 
 <details>
   <summary>code</summary>
@@ -1318,7 +1267,6 @@
   plt.show()
   ```
 </details>
-
 
 <br>
 
@@ -1343,6 +1291,6 @@
 <br>
 
 - 앞으로의 주가는 하락한다고 예측되나,   
-4분기에 데뷔 예정인 신규 걸그룹의 성공 여부에 따라 주가 변동이 있을 것이라 생각된다.
+4분기 신규 걸그룹 론칭 성공 여부에 따라 주가 변동이 있을 것이라 생각된다(쇼크).
 
 - 현재 데드 크로스가 나타나므로 매수를 권장하지 않는다.
