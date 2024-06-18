@@ -1,6 +1,6 @@
 <img src='./images/sm05.png' width='70px'>
 
-# SM 엔터테인먼트 수익률
+# SM 엔터테인먼트 주가 예측
 - 2024년 6월 17일 기준으로 작성
 
 <br></br>
@@ -277,8 +277,8 @@
 <br>
 
 <div>
-  <img src='./images/m04.png' width=300px>
-  <img src='./images/m05.png' width=500px>
+  <img src='./images/m04.png' width=500px>
+  <img src='./images/m05.png' width=800px>
 </div>
 
 <br></br>
