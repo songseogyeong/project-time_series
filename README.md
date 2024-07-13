@@ -1,5 +1,4 @@
-# USA Residential Building Energy Consumption Survey Regression Project
-SM 엔터테인먼트 주가 예측
+# SM 엔터테인먼트 주가 예측
 
 <br>
 
